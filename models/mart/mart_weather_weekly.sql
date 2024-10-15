@@ -18,4 +18,4 @@ WITH weekly_weather AS (
 )
 
 SELECT * 
-FROM weekly_weather; -- No semicolon before this line
+FROM weekly_weather -- No semicolon before this line
