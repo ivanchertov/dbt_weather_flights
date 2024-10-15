@@ -40,5 +40,4 @@ SELECT city,
        total_stats.*
 FROM prep_airports
 LEFT JOIN total_stats
-USING (faa)
-ORDER BY city;
+USING (faa);

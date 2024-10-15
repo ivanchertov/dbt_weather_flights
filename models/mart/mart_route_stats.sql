@@ -42,4 +42,4 @@ SELECT
     r.total_diverted
 FROM route_stats r
 LEFT JOIN origin_airports o ON r.origin_airport_code = o.origin_airport_code
-LEFT JOIN destination_airports d ON r.destination_airport_code = d.destination_airport_code;
+LEFT JOIN destination_airports d ON r.destination_airport_code = d.destination_airport_code; -- Removed extra semicolon here

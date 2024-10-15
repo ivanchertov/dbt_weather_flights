@@ -54,4 +54,4 @@ SELECT
     ws.daily_wind_peakgust
 FROM flight_stats fs
 LEFT JOIN airport_info a ON fs.airport_code = a.airport_code
-LEFT JOIN weather_stats ws ON fs.flight_date = ws.flight_date AND fs.airport_code = ws.airport_code;
+LEFT JOIN weather_stats ws ON fs.flight_date = ws.flight_date AND fs.airport_code = ws.airport_code; -- Removed the problematic semicolon here

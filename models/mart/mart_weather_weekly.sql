@@ -17,6 +17,5 @@ WITH weekly_weather AS (
     GROUP BY TO_CHAR(date, 'IYYY-IW'), faa  -- Group by ISO year-week and airport code
 )
 
--- Remove the ORDER BY here
 SELECT * 
-FROM weekly_weather;
+FROM weekly_weather; -- No semicolon before this line
