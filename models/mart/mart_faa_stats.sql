@@ -1,7 +1,3 @@
-SELECT * FROM prep_flights
----------------------------------------------------
-/* THE ACTUAL QUERY */
-
 -- unique number of departures connections
 WITH departures AS (
 					SELECT origin AS faa
