@@ -10,12 +10,12 @@ WITH flight_stats AS (
         COUNT(*) - SUM(CASE WHEN cancelled = 1 THEN 1 ELSE 0 END) - SUM(CASE WHEN diverted = 1 THEN 1 ELSE 0 END) AS total_flights_occurred, -- flights that occurred
         COUNT(DISTINCT tail_number) AS unique_airplanes,  -- optional: unique airplanes per day
         COUNT(DISTINCT airline) AS unique_airlines        -- optional: unique airlines per day
-    FROM {{ref('prep_flights')}}
+    FROM "hh_analytics_24_2"."s_ivanchertov"."prep_flights"
     GROUP BY flight_date, origin
 ),
 airport_info AS (
     SELECT faa AS airport_code, city, country, name AS airport_name
-    FROM {{ref('prep_airports')}}
+    FROM "hh_analytics_24_2"."s_ivanchertov"."prep_airports"
 ),
 weather_stats AS (
     SELECT 
@@ -28,7 +28,7 @@ weather_stats AS (
         AVG(wind_direction) AS daily_avg_wind_direction, -- daily average wind direction
         AVG(wind_speed) AS daily_avg_wind_speed,        -- daily average wind speed
         MAX(wind_gust) AS daily_wind_peakgust          -- daily peak wind gust
-    FROM {{ref('prep_weather_daily')}}
+    FROM "hh_analytics_24_2"."s_ivanchertov"."prep_weather_daily"
     GROUP BY flight_date, faa
 )
 SELECT
@@ -54,5 +54,4 @@ SELECT
     ws.daily_wind_peakgust
 FROM flight_stats fs
 LEFT JOIN airport_info a ON fs.airport_code = a.airport_code
-LEFT JOIN weather_stats ws ON fs.flight_date = ws.flight_date AND fs.airport_code = ws.airport_code
-ORDER BY fs.flight_date, fs.airport_code;
+LEFT JOIN weather_stats ws ON fs.flight_date = ws.flight_date AND fs.airport_code = ws.airport_code;

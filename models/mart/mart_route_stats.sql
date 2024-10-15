@@ -12,17 +12,17 @@ WITH route_stats AS (
         SUM(CASE WHEN f.cancelled = 1 THEN 1 ELSE 0 END) AS total_cancelled,
         SUM(CASE WHEN f.diverted = 1 THEN 1 ELSE 0 END) AS total_diverted
     FROM 
-        {{ref('prep_flights')}} f
+        "hh_analytics_24_2"."s_ivanchertov"."prep_flights" f
     GROUP BY 
         f.origin, f.dest
 ),
 origin_airports AS (
     SELECT faa AS origin_airport_code, city AS origin_city, country AS origin_country
-    FROM {{ref('prep_airports')}}
+    FROM "hh_analytics_24_2"."s_ivanchertov"."prep_airports"
 ),
 destination_airports AS (
     SELECT faa AS destination_airport_code, city AS destination_city, country AS destination_country
-    FROM {{ref('prep_airports')}}
+    FROM "hh_analytics_24_2"."s_ivanchertov"."prep_airports"
 )
 SELECT
     r.origin_airport_code,
@@ -42,5 +42,4 @@ SELECT
     r.total_diverted
 FROM route_stats r
 LEFT JOIN origin_airports o ON r.origin_airport_code = o.origin_airport_code
-LEFT JOIN destination_airports d ON r.destination_airport_code = d.destination_airport_code
-ORDER BY r.total_flights_on_route DESC;
+LEFT JOIN destination_airports d ON r.destination_airport_code = d.destination_airport_code;
