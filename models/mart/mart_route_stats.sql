@@ -1,36 +1,34 @@
 WITH route_stats AS (
     SELECT
-        f.origin AS origin_airport_code,
-        f.dest AS destination_airport_code,
+        origin AS origin_airport_code,
+        dest AS destination_airport_code,
         COUNT(*) AS total_flights_on_route,
-        COUNT(DISTINCT f.tail_number) AS unique_airplanes,
-        COUNT(DISTINCT f.airline) AS unique_airlines,
-        ROUND(AVG(f.actual_elapsed_time), 2) AS avg_actual_elapsed_time,
-        ROUND(AVG(f.arr_delay), 2) AS avg_arrival_delay,
-        MAX(f.arr_delay) AS max_arrival_delay,
-        MIN(f.arr_delay) AS min_arrival_delay,
-        SUM(CASE WHEN f.cancelled = 1 THEN 1 ELSE 0 END) AS total_cancelled,
-        SUM(CASE WHEN f.diverted = 1 THEN 1 ELSE 0 END) AS total_diverted
-    FROM 
-        "hh_analytics_24_2"."s_ivanchertov"."prep_flights" f
-    GROUP BY 
-        f.origin, f.dest
+        COUNT(DISTINCT tail_number) AS unique_airplanes,
+        COUNT(DISTINCT airline) AS unique_airlines,
+        ROUND(AVG(actual_elapsed_time), 2) AS avg_actual_elapsed_time,
+        ROUND(AVG(arr_delay), 2) AS avg_arrival_delay,
+        MAX(arr_delay) AS max_arrival_delay,
+        MIN(arr_delay) AS min_arrival_delay,
+        SUM(CASE WHEN cancelled = 1 THEN 1 ELSE 0 END) AS total_cancelled,
+        SUM(CASE WHEN diverted = 1 THEN 1 ELSE 0 END) AS total_diverted
+    FROM prep_flights
+    GROUP BY origin, dest
 ),
 origin_airports AS (
-    SELECT faa AS origin_airport_code, city AS origin_city, country AS origin_country
-    FROM "hh_analytics_24_2"."s_ivanchertov"."prep_airports"
+    SELECT faa AS origin_airport_code, region, country
+    FROM prep_airports
 ),
 destination_airports AS (
-    SELECT faa AS destination_airport_code, city AS destination_city, country AS destination_country
-    FROM "hh_analytics_24_2"."s_ivanchertov"."prep_airports"
+    SELECT faa AS destination_airport_code, region AS dest_region, country AS dest_country
+    FROM prep_airports
 )
 SELECT
     r.origin_airport_code,
-    o.origin_city,
-    o.origin_country,
+    o.region AS origin_region,
+    o.country AS origin_country,
     r.destination_airport_code,
-    d.destination_city,
-    d.destination_country,
+    d.dest_region,
+    d.dest_country,
     r.total_flights_on_route,
     r.unique_airplanes,
     r.unique_airlines,
@@ -42,4 +40,4 @@ SELECT
     r.total_diverted
 FROM route_stats r
 LEFT JOIN origin_airports o ON r.origin_airport_code = o.origin_airport_code
-LEFT JOIN destination_airports d ON r.destination_airport_code = d.destination_airport_code -- Removed extra semicolon here
+LEFT JOIN destination
