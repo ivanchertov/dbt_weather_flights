@@ -1,22 +1,26 @@
-WITH weekly_weather AS (
-    SELECT 
-        TO_CHAR(date, 'IYYY-IW') AS week_year,  -- ISO year and week
-        airport_code,  -- Using airport_code from prep_weather_daily
-        
-        -- Aggregate metrics based on type (average, max, min, sum, or mode)
-        MIN(min_temp_c) AS weekly_min_temp,            -- Minimum temperature of the week
-        MAX(max_temp_c) AS weekly_max_temp,            -- Maximum temperature of the week
-        AVG(precipitation_mm) AS weekly_avg_precipitation, -- Average precipitation over the week
-        SUM(precipitation_mm) AS weekly_total_precipitation, -- Total precipitation over the week
-        SUM(max_snow_mm) AS weekly_total_snowfall,         -- Total snowfall of the week
-        AVG(avg_wind_direction) AS weekly_avg_wind_direction, -- Average wind direction over the week
-        AVG(avg_wind_speed_km) AS weekly_avg_wind_speed,         -- Average wind speed over the week
-        MAX(wind_peakgust_kml) AS weekly_wind_peakgust         -- Maximum wind gust over the week
-    FROM 
-        "hh_analytics_24_2"."s_ivanchertov"."prep_weather_daily"
-    GROUP BY 
-        TO_CHAR(date, 'IYYY-IW'), airport_code  -- Group by ISO year-week and airport code
+WITH daily_data AS (
+        SELECT * 
+        FROM {{ref('prep_weather_daily')}}
+),
+weekly_aggregation AS (
+        SELECT airport_code
+            ,station_id
+            ,date_year
+            ,cw
+            ,AVG(avg_temp_c)::NUMERIC(4,2) AS avg_temp_c
+            ,MIN(min_temp_c)::NUMERIC(4,2) AS min_temp_c
+            ,MAX(max_temp_c)::NUMERIC(4,2) AS max_temp_c
+            ,SUM(precipitation_mm) AS total_prec_mm
+            ,SUM(max_snow_mm) AS total_max_snow_mm
+            ,AVG(avg_wind_direction)::NUMERIC(5,2) AS avg_wind_direction
+            ,AVG(avg_wind_speed_kmh)::NUMERIC(5,2) AS avg_wind_speed_kmh
+            ,MAX(wind_peakgust_kmh)::NUMERIC(5,2) AS wind_peakgust_kmh
+            ,AVG(avg_pressure_hpa)::NUMERIC(6,2) AS avg_pressure_hpa
+            ,SUM(sun_minutes) AS total_sun_minutes
+            ,MODE() WITHIN GROUP (ORDER BY date_month) AS month
+            ,MODE() WITHIN GROUP (ORDER BY month_name) AS month_name
+            ,MODE() WITHIN GROUP (ORDER BY season) AS season
+        FROM daily_data
+        GROUP BY airport_code, station_id, date_year, cw
 )
-SELECT * 
-FROM weekly_weather
-ORDER BY week_year, airport_code;
+SELECT * FROM weekly_aggregation

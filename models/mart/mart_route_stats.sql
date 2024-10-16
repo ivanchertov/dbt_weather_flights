@@ -1,43 +1,35 @@
-WITH route_stats AS (
-    SELECT
-        origin AS origin_airport_code,
-        dest AS destination_airport_code,
-        COUNT(*) AS total_flights_on_route,
-        COUNT(DISTINCT tail_number) AS unique_airplanes,
-        COUNT(DISTINCT airline) AS unique_airlines,
-        ROUND(AVG(actual_elapsed_time), 2) AS avg_actual_elapsed_time,
-        ROUND(AVG(arr_delay), 2) AS avg_arrival_delay,
-        MAX(arr_delay) AS max_arrival_delay,
-        MIN(arr_delay) AS min_arrival_delay,
-        SUM(CASE WHEN cancelled = 1 THEN 1 ELSE 0 END) AS total_cancelled,
-        SUM(CASE WHEN diverted = 1 THEN 1 ELSE 0 END) AS total_diverted
-    FROM prep_flights
-    GROUP BY origin, dest
+WITH flights_stats AS (
+	SELECT -- TO_CHAR(flight_date, 'YYYY-MM') AS flight_month, --for the alternative GROUPBY also by month (see below)
+		   origin
+		   ,dest
+        --    ,origin || ' - ' || dest AS route -- optional (challenge: keep only 'route' in the final query output, w/o 'origin' and 'dest')
+		   ,COUNT(flight_number) AS n_flights
+		   ,COUNT(DISTINCT tail_number) AS nunique_tails
+		   ,COUNT(DISTINCT airline) AS nunique_airlines
+		   ,AVG(actual_elapsed_time)::INTEGER * ('1 second'::INTERVAL) AS avg_actual_elapsed_time 
+        --    ,(AVG(actual_elapsed_time)*60)::INTEGER * ('1 second'::INTERVAL) AS avg_actual_elapsed_time -- without rounding the seconds
+		--    ,STDDEV(actual_elapsed_time)::INTEGER * ('1 second'::INTERVAL) AS sd_actual_elapsed_time 
+		   ,AVG(arr_delay)::INTEGER * ('1 second'::INTERVAL) AS avg_arr_delay
+		   ,MIN(arr_delay_interval) AS min_arr_delay
+		   ,MAX(arr_delay_interval) AS max_arr_delay
+		   ,SUM(cancelled) AS total_cancelled
+		   ,SUM(diverted) AS total_diverted
+	FROM {{ref('prep_flights')}}
+    GROUP BY (origin, dest) -- over all time
+	-- GROUP BY (flight_month, origin, dest) -- alternative GROUPBY also by month
 ),
-origin_airports AS (
-    SELECT faa AS origin_airport_code, region, country
-    FROM prep_airports
-),
-destination_airports AS (
-    SELECT faa AS destination_airport_code, region AS dest_region, country AS dest_country
-    FROM prep_airports
+add_names AS (
+	SELECT o.city AS origin_city
+			,d.city AS dest_city
+			,o.name AS origin_name
+			,d.name AS dest_name
+			,f.*
+	FROM flights_stats f
+	LEFT JOIN {{ref('prep_airports')}} o
+		ON origin=o.faa
+	LEFT JOIN {{ref('prep_airports')}} d
+		ON dest=d.faa
 )
-SELECT
-    r.origin_airport_code,
-    o.region AS origin_region,
-    o.country AS origin_country,
-    r.destination_airport_code,
-    d.dest_region,
-    d.dest_country,
-    r.total_flights_on_route,
-    r.unique_airplanes,
-    r.unique_airlines,
-    r.avg_actual_elapsed_time,
-    r.avg_arrival_delay,
-    r.max_arrival_delay,
-    r.min_arrival_delay,
-    r.total_cancelled,
-    r.total_diverted
-FROM route_stats r
-LEFT JOIN origin_airports o ON r.origin_airport_code = o.origin_airport_code
-LEFT JOIN destination
+SELECT *
+FROM add_names
+ORDER BY (origin, dest) DESC
