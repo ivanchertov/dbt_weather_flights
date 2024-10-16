@@ -38,7 +38,7 @@ total_stats AS (
 					USING (faa)
 )
 -- add city, country and name of the airport
-SELECT city  
+SELECT faa as city  
 		,country
 		,name
 		,total_stats.*
